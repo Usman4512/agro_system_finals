@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatFlow — AI Chatbot Builder</title>
+<style>
+  :root {
+    --primary: #6C47FF;
+    --primary-dark: #4F2FD9;
+    --primary-light: #EDE9FF;
+    --accent: #00D4AA;
+    --accent-dark: #00A885;
+    --bg: #0A0A0F;
+    --bg2: #13131C;
+    --bg3: #1C1C2A;
+    --bg4: #242436;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #F0EFF8;
+    --text2: #9896B0;
+    --text3: #6B6985;
+    --danger: #FF5C5C;
+    --success: #00D4AA;
+    --warning: #FFB547;
+    --card-radius: 16px;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ─── LAYOUT ─── */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .main-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--bg2); }
+  .main-body { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* ─── SIDEBAR ─── */
+  .logo { padding: 20px 20px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+  .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-name { font-weight: 700; font-size: 16px; letter-spacing: -0.3px; }
+  .logo-badge { font-size: 10px; background: var(--primary-light); color: var(--primary); padding: 2px 7px; border-radius: 20px; font-weight: 600; margin-left: 4px; }
+  .plan-pill { margin: 12px 14px; background: linear-gradient(135deg, #6C47FF22, #00D4AA22); border: 1px solid var(--border2); border-radius: var(--radius); padding: 10px 12px; font-size: 12px; }
+  .plan-pill strong { color: var(--primary); display: block; font-size: 13px; margin-bottom: 2px; }
+  .plan-pill span { color: var(--text2); }
+  .nav { flex: 1; padding: 8px 10px; overflow-y: auto; }
+  .nav-section { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); padding: 12px 10px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13.5px; color: var(--text2); transition: all 0.15s; margin-bottom: 2px; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+  .nav-item.active svg { opacity: 1; }
+  .nav-icon { width: 16px; flex-shrink: 0; opacity: 0.7; }
+  .nav-badge { margin-left: auto; background: var(--primary); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 600; }
+  .sidebar-footer { padding: 16px 14px; border-top: 1px solid var(--border); }
+  .user-row { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--radius-sm); cursor: pointer; }
+  .user-row:hover { background: var(--bg3); }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-email { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ─── HEADER ─── */
+  .page-title { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+  .breadcrumb { font-size: 13px; color: var(--text2); }
+  .header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .btn-ghost:hover { background: var(--bg3); color: var(--text); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(255,92,92,0.3); }
+  .btn-danger:hover { background: rgba(255,92,92,0.08); }
+  .btn-accent { background: var(--accent); color: #0A0A0F; }
+  .btn-accent:hover { background: var(--accent-dark); }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+
+  /* ─── TABS ─── */
+  .tabs { display: flex; gap: 2px; background: var(--bg3); padding: 3px; border-radius: var(--radius-sm); }
+  .tab { padding: 7px 16px; border-radius: 5px; font-size: 13px; cursor: pointer; color: var(--text2); border: none; background: none; transition: all 0.15s; font-weight: 500; }
+  .tab.active { background: var(--bg2); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+
+  /* ─── CARDS ─── */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 20px; }
+  .card-sm { border-radius: var(--radius); padding: 16px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .card-title { font-size: 14px; font-weight: 600; }
+  .card-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* ─── METRIC CARDS ─── */
+  .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .metric-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 18px 20px; }
+  .metric-label { font-size: 12px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .metric-value { font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+  .metric-trend { font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .trend-up { color: var(--success); }
+  .trend-down { color: var(--danger); }
+
+  /* ─── BOT CARDS ─── */
+  .bots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .bot-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 18px; position: relative; transition: border-color 0.2s; cursor: pointer; }
+  .bot-card:hover { border-color: var(--border2); }
+  .bot-card.active-bot { border-color: var(--primary); }
+  .bot-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; }
+  .bot-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .bot-desc { font-size: 12px; color: var(--text2); margin-bottom: 14px; line-height: 1.5; }
+  .bot-stats { display: flex; gap: 14px; font-size: 11px; color: var(--text3); }
+  .bot-stat strong { color: var(--text); font-weight: 600; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .status-live { background: var(--success); }
+  .status-draft { background: var(--warning); }
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; margin-bottom: 10px; }
+  .status-badge.live { background: rgba(0,212,170,0.12); color: var(--success); }
+  .status-badge.draft { background: rgba(255,181,71,0.12); color: var(--warning); }
+  .bot-actions { display: flex; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  /* ─── BUILDER ─── */
+  .builder-layout { display: grid; grid-template-columns: 280px 1fr 320px; gap: 0; height: 100%; overflow: hidden; }
+  .builder-panel { background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; }
+  .builder-canvas { background: var(--bg); padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .builder-config { border-left: 1px solid var(--border); overflow-y: auto; padding: 20px; }
+  .flow-node { background: var(--bg2); border: 1.5px solid var(--border2); border-radius: var(--card-radius); padding: 14px 16px; max-width: 340px; margin: 0 auto; position: relative; }
+  .flow-node.start-node { border-color: var(--accent); }
+  .flow-node.ai-node { border-color: var(--primary); }
+  .flow-node.action-node { border-color: var(--warning); }
+  .flow-node-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .node-icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .node-icon.start { background: rgba(0,212,170,0.15); }
+  .node-icon.ai { background: rgba(108,71,255,0.15); }
+  .node-icon.action { background: rgba(255,181,71,0.15); }
+  .node-label { font-size: 12px; font-weight: 600; }
+  .node-content { font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+  .flow-connector { text-align: center; color: var(--text3); font-size: 18px; line-height: 1; }
+
+  /* ─── FORM ELEMENTS ─── */
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-input, .form-select, .form-textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 8px 12px; color: var(--text); font-size: 13.5px; font-family: inherit; outline: none; transition: border-color 0.15s; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); }
+  .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .form-select option { background: var(--bg3); }
+  .toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg4); border-radius: 22px; transition: 0.2s; }
+  .toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .toggle-slider { background: var(--primary); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(18px); background: #fff; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 13px; }
+  .toggle-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* ─── EMBED ─── */
+  .embed-box { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; font-family: 'Monaco', 'Menlo', monospace; font-size: 12px; color: #A8E6CF; line-height: 1.6; overflow-x: auto; position: relative; }
+  .copy-btn { position: absolute; top: 10px; right: 10px; background: var(--bg4); border: 1px solid var(--border2); color: var(--text2); padding: 4px 10px; border-radius: var(--radius-sm); font-size: 11px; cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { background: var(--bg2); color: var(--text); }
+
+  /* ─── CHAT PREVIEW ─── */
+  .chat-container { max-width: 360px; margin: 0 auto; background: var(--bg2); border: 1px solid var(--border2); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .chat-header-bar { background: var(--primary); padding: 14px 18px; display: flex; align-items: center; gap: 10px; }
+  .chat-avatar-sm { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .chat-title-sm { font-size: 14px; font-weight: 600; }
+  .chat-sub-sm { font-size: 11px; opacity: 0.8; }
+  .chat-online { width: 8px; height: 8px; background: #00FF9E; border-radius: 50%; box-shadow: 0 0 6px #00FF9E; }
+  .chat-messages { padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
+  .msg { max-width: 80%; padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
+  .msg-bot { background: var(--bg3); color: var(--text); border-bottom-left-radius: 4px; align-self: flex-start; }
+  .msg-user { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+  .chat-input-bar { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .chat-input-field { flex: 1; background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 8px 14px; color: var(--text); font-size: 13px; outline: none; font-family: inherit; }
+  .chat-send { background: var(--primary); border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* ─── ANALYTICS ─── */
+  .chart-bar-wrap { display: flex; gap: 4px; align-items: flex-end; height: 80px; }
+  .chart-bar { flex: 1; background: var(--primary); border-radius: 3px 3px 0 0; opacity: 0.7; transition: opacity 0.15s; min-width: 8px; }
+  .chart-bar:hover { opacity: 1; }
+  .chart-labels { display: flex; gap: 4px; margin-top: 6px; }
+  .chart-label { flex: 1; font-size: 9px; color: var(--text3); text-align: center; }
+
+  /* ─── TABLES ─── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text2); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg3); }
+
+  /* ─── INTEGRATIONS ─── */
+  .integration-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .integration-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .integration-card:hover { border-color: var(--border2); background: var(--bg2); }
+  .integration-card.connected { border-color: rgba(0,212,170,0.4); }
+  .integration-logo { font-size: 26px; margin-bottom: 8px; }
+  .integration-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .integration-status { font-size: 11px; color: var(--text3); }
+  .integration-card.connected .integration-status { color: var(--success); }
+
+  /* ─── NOTIFICATIONS ─── */
+  .notification { display: flex; gap: 10px; padding: 12px; background: var(--bg3); border-radius: var(--radius); margin-bottom: 8px; font-size: 13px; }
+  .notif-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .notif-text { flex: 1; }
+  .notif-title { font-weight: 500; margin-bottom: 2px; }
+  .notif-sub { font-size: 12px; color: var(--text3); }
+  .notif-time { font-size: 11px; color: var(--text3); white-space: nowrap; }
+
+  /* ─── SECTION HEADER ─── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  .section-sub { font-size: 12px; color: var(--text2); }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 10px; }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; height: 100%; }
+  .screen.active { display: flex; flex-direction: column; overflow: hidden; }
+  .screen-body { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state { text-align: center; padding: 48px 24px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .empty-sub { font-size: 13px; color: var(--text2); max-width: 280px; margin: 0 auto 20px; line-height: 1.6; }
+
+  /* ─── PROGRESS ─── */
+  .progress-bar { background: var(--bg4); border-radius: 10px; height: 5px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 10px; background: var(--primary); transition: width 0.3s; }
+  .progress-fill.green { background: var(--success); }
+  .progress-fill.amber { background: var(--warning); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: 20px; padding: 28px; width: 480px; max-width: 90vw; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  /* ─── TOAST ─── */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg2); border: 1px solid var(--success); color: var(--text); padding: 12px 18px; border-radius: var(--radius); font-size: 13.5px; display: flex; align-items: center; gap: 8px; z-index: 200; opacity: 0; transform: translateY(10px); transition: all 0.25s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast-icon { color: var(--success); }
+
+  /* ─── TAGS ─── */
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .tag-purple { background: rgba(108,71,255,0.15); color: #A58FFF; }
+  .tag-green { background: rgba(0,212,170,0.12); color: var(--success); }
+  .tag-amber { background: rgba(255,181,71,0.12); color: var(--warning); }
+  .tag-red { background: rgba(255,92,92,0.12); color: var(--danger); }
+
+  /* ─── DIVIDER ─── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1100px) {
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .bots-grid { grid-template-columns: repeat(2, 1fr); }
+    .integration-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .bots-grid { grid-template-columns: 1fr; }
+    .integration-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">💬</div>
+      <div>
+        <span class="logo-name">ChatFlow</span>
+        <span class="logo-badge">PRO</span>
+      </div>
+    </div>
+
+    <div class="plan-pill">
+      <strong>Pro Plan</strong>
+      <span>3 of 5 bots used · 12,400 / 50,000 msgs</span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" onclick="showScreen('dashboard')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.8"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="showScreen('bots')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke-width="1.8"/><path d="M9 8h6M12 4v1M8 11.5C6 13 4 16 4 20h16c0-4-2-7-4-8.5" stroke-width="1.8" stroke-linecap="round"/></svg>
+        My Bots
+        <span class="nav-badge">3</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('builder')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Bot Builder
+      </div>
+
+      <div class="nav-section">Analytics</div>
+      <div class="nav-item" onclick="showScreen('analytics')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 20h18M7 16V10M12 16V4M17 16v-6" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Analytics
+      </div>
+      <div class="nav-item" onclick="showScreen('conversations')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Conversations
+      </div>
+
+      <div class="nav-section">Settings</div>
+      <div class="nav-item" onclick="showScreen('integrations')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke-width="1.8" stroke-linecap="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Integrations
+      </div>
+      <div class="nav-item" onclick="showScreen('settings')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" stroke-width="1.8"/></svg>
+        Settings
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">JD</div>
+        <div class="user-info">
+          <div class="user-name">John Doe</div>
+          <div class="user-email">john@yoursite.com</div>
+        </div>
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--text3)"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- DASHBOARD -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-dashboard" class="screen active">
+      <div class="main-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="breadcrumb">Welcome back, John 👋</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost btn-sm" onclick="showToast('Refreshing data...')">↻ Refresh</button>
+          <button class="btn btn-primary btn-sm" onclick="showScreen('builder'); openModal('newbot')">+ New Bot</button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <!-- Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Total Conversations</div>
+            <div class="metric-value" style="color:var(--primary)">12,847</div>
+            <div class="metric-trend trend-up">↑ 18.4% vs last month</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Active Bots</div>
+            <div class="metric-value" style="color:var(--accent)">3</div>
+            <div class="metric-trend" style="color:var(--text3)">2 live · 1 draft</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Resolution Rate</div>
+            <div class="metric-value" style="color:var(--warning)">87%</div>
+            <div class="metric-trend trend-up">↑ 3.2% this week</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Leads Captured</div>
+            <div class="metric-value" style="color:#FF79C6">1,203</div>
+            <div class="metric-trend trend-up">↑ 22% this month</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <!-- Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Message Volume</div>
+                <div class="card-sub">Last 14 days</div>
+              </div>
+              <span class="tag tag-purple">+18.4%</span>
+            </div>
+            <div class="chart-bar-wrap" id="dashChart"></div>
+            <div class="chart-labels" id="dashChartLabels"></div>
+          </div>
+
+          <!-- Top Bots -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Bot Performance</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                  <span>🛒 SalesBot Pro</span>
+                  <span style="color:var(--text2)">6,200 msgs</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                  <span>🎧 Support Hero</span>
+                  <span style="color:var(--text2)">4,100 msgs</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill green" style="width:52%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                  <span>📅 Lead Catcher</span>
+                  <span style="color:var(--text2)">2,547 msgs</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill amber" style="width:33%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Conversations -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent Conversations</div>
+            <button class="btn btn-ghost btn-sm" onclick="showScreen('conversations')">View all →</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Visitor</th>
+                <th>Bot</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:var(--text)">visitor_2841</td>
+                <td><span class="tag tag-purple">SalesBot</span></td>
+                <td>What's the pricing for enterprise?</td>
+                <td><span class="tag tag-green">Resolved</span></td>
+                <td>2m ago</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text)">visitor_2840</td>
+                <td><span class="tag tag-green">Support</span></td>
+                <td>I can't access my account</td>
+                <td><span class="tag tag-amber">Escalated</span></td>
+                <td>8m ago</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text)">visitor_2839</td>
+                <td><span class="tag tag-purple">Lead Bot</span></td>
+                <td>Looking for custom solutions</td>
+                <td><span class="tag tag-green">Lead Captured</span></td>
+                <td>14m ago</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text)">visitor_2838</td>
+                <td><span class="tag tag-purple">SalesBot</span></td>
+                <td>How does the free trial work?</td>
+                <td><span class="tag tag-green">Resolved</span></td>
+                <td>21m ago</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- BOTS SCREEN -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-bots" class="screen">
+      <div class="main-header">
+        <div>
+          <div class="page-title">My Bots</div>
+          <div class="breadcrumb">3 bots · 2 live</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('newbot')">+ Create Bot</button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="bots-grid">
+
+          <div class="bot-card active-bot">
+            <div class="status-badge live"><div class="status-dot status-live"></div> Live</div>
+            <div class="bot-avatar" style="background:rgba(108,71,255,0.15)">🛒</div>
+            <div class="bot-name">SalesBot Pro</div>
+            <div class="bot-desc">Converts visitors into leads. Handles objections, shows pricing, books demos.</div>
+            <div class="bot-stats">
+              <div><strong>6,200</strong> msgs</div>
+              <div><strong>34%</strong> conv. rate</div>
+              <div><strong>4.8</strong> rating</div>
+            </div>
+            <div class="bot-actions">
+              <button class="btn btn-ghost btn-sm" onclick="showScreen('builder')">✏️ Edit</button>
+              <button class="btn btn-ghost btn-sm" onclick="openModal('embed')">⟨/⟩ Embed</button>
+              <button class="btn btn-ghost btn-sm" onclick="showScreen('analytics')">📊 Stats</button>
+            </div>
+          </div>
+
+          <div class="bot-card active-bot">
+            <div class="status-badge live"><div class="status-dot status-live"></div> Live</div>
+            <div class="bot-avatar" style="background:rgba(0,212,170,0.12)">🎧</div>
+            <div class="bot-name">Support Hero</div>
+            <div class="bot-desc">24/7 customer support. Resolves tickets, escalates to humans when needed.</div>
+            <div class="bot-stats">
+              <div><strong>4,100</strong> msgs</div>
+              <div><strong>87%</strong> resolve rate</div>
+              <div><strong>4.6</strong> rating</div>
+            </div>
+            <div class="bot-actions">
+              <button class="btn btn-ghost btn-sm" onclick="showScreen('builder')">✏️ Edit</button>
+              <button class="btn btn-ghost btn-sm" onclick="openModal('embed')">⟨/⟩ Embed</button>
+              <button class="btn btn-ghost btn-sm" onclick="showScreen('analytics')">📊 Stats</button>
+            </div>
+          </div>
+
+          <div class="bot-card">
+            <div class="status-badge draft"><div class="status-dot status-draft"></div> Draft</div>
+            <div class="bot-avatar" style="background:rgba(255,181,71,0.12)">📅</div>
+            <div class="bot-name">Lead Catcher</div>
+            <div class="bot-desc">Qualifies leads, captures contact info and books meetings automatically.</div>
+            <div class="bot-stats">
+              <div><strong>2,547</strong> msgs</div>
+              <div><strong>28%</strong> lead rate</div>
+              <div><strong>4.3</strong> rating</div>
+            </div>
+            <div class="bot-actions">
+              <button class="btn btn-primary btn-sm" onclick="showToast('Bot published! 🚀')">🚀 Publish</button>
+              <button class="btn btn-ghost btn-sm" onclick="showScreen('builder')">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm">🗑</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- BOT BUILDER -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-builder" class="screen">
+      <div class="main-header">
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-ghost btn-sm" onclick="showScreen('bots')">← Back</button>
+          <div>
+            <div class="page-title">Bot Builder — SalesBot Pro</div>
+            <div class="breadcrumb">Flow Editor · Visual Mode</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="tabs">
+            <button class="tab active" onclick="switchTab(this,'flow')">Flow</button>
+            <button class="tab" onclick="switchTab(this,'preview')">Preview</button>
+            <button class="tab" onclick="switchTab(this,'training')">Training</button>
+          </div>
+          <button class="btn btn-accent btn-sm" onclick="showToast('Changes saved! ✅')">Save Changes</button>
+          <button class="btn btn-primary btn-sm" onclick="showToast('Bot published! 🚀')">Publish Live</button>
+        </div>
+      </div>
+
+      <div style="flex:1;overflow:hidden;display:flex">
+
+        <!-- Left Panel: Blocks -->
+        <div class="builder-panel" style="width:220px;padding:16px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text3);margin-bottom:10px">Add Block</div>
+          <div style="display:flex;flex-direction:column;gap:6px" id="blockList">
+            <div class="flow-node card-sm" style="cursor:grab;padding:10px 12px;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:8px" draggable="true">
+              <span style="font-size:16px">💬</span> Message
+            </div>
+            <div class="flow-node card-sm" style="cursor:grab;padding:10px 12px;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:8px" draggable="true">
+              <span style="font-size:16px">🤖</span> AI Response
+            </div>
+            <div class="flow-node card-sm" style="cursor:grab;padding:10px 12px;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:8px" draggable="true">
+              <span style="font-size:16px">🔀</span> Condition
+            </div>
+            <div class="flow-node card-sm" style="cursor:grab;padding:10px 12px;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:8px" draggable="true">
+              <span style="font-size:16px">📧</span> Collect Email
+            </div>
+            <div class="flow-node card-sm" style="cursor:grab;padding:10px 12px;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:8px" draggable="true">
+              <span style="font-size:16px">📅</span> Book Meeting
+            </div>
+            <div class="flow-node card-sm" style="cursor:grab;padding:10px 12px;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:8px" draggable="true">
+              <span style="font-size:16px">🔗</span> Webhook
+            </div>
+            <div class="flow-node card-sm" style="cursor:grab;padding:10px 12px;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:8px" draggable="true">
+              <span style="font-size:16px">👤</span> Hand Off
+            </div>
+            <div class="flow-node card-sm" style="cursor:grab;padding:10px 12px;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:8px" draggable="true">
+              <span style="font-size:16px">⭐</span> Rate Chat
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas: Flow Tabs -->
+        <div id="tab-flow" class="builder-canvas" style="flex:1;overflow-y:auto">
+
+          <div class="flow-node start-node" style="max-width:340px;margin:0 auto">
+            <div class="flow-node-header">
+              <div class="node-icon start">🟢</div>
+              <div class="node-label" style="color:var(--accent)">Trigger · Visitor Opens Chat</div>
+            </div>
+            <div class="node-content">Fires when a visitor first opens the chat widget on your site.</div>
+          </div>
+
+          <div class="flow-connector">↓</div>
+
+          <div class="flow-node ai-node" style="max-width:340px;margin:0 auto">
+            <div class="flow-node-header">
+              <div class="node-icon ai">🤖</div>
+              <div class="node-label" style="color:var(--primary)">AI Message · Greeting</div>
+            </div>
+            <div class="node-content">"Hi there! 👋 I'm your AI assistant. Are you looking to buy, get support, or just browsing?"</div>
+          </div>
+
+          <div class="flow-connector">↓</div>
+
+          <div class="flow-node" style="max-width:340px;margin:0 auto;border-color:rgba(255,181,71,0.5)">
+            <div class="flow-node-header">
+              <div class="node-icon action" style="background:rgba(255,181,71,0.15)">🔀</div>
+              <div class="node-label" style="color:var(--warning)">Branch · User Intent</div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <span class="tag tag-purple">Buying</span>
+              <span class="tag tag-green">Support</span>
+              <span class="tag tag-amber">Browsing</span>
+            </div>
+          </div>
+
+          <div class="flow-connector">↓</div>
+
+          <div class="flow-node ai-node" style="max-width:340px;margin:0 auto">
+            <div class="flow-node-header">
+              <div class="node-icon ai">🤖</div>
+              <div class="node-label" style="color:var(--primary)">AI Response · Dynamic Reply</div>
+            </div>
+            <div class="node-content">Uses GPT-4 to give a personalized answer based on your knowledge base and intent.</div>
+          </div>
+
+          <div class="flow-connector">↓</div>
+
+          <div class="flow-node" style="max-width:340px;margin:0 auto;border-color:rgba(255,79,130,0.5)">
+            <div class="flow-node-header">
+              <div class="node-icon" style="background:rgba(255,79,130,0.12)">📧</div>
+              <div class="node-label" style="color:#FF79C6">Collect · Email + Name</div>
+            </div>
+            <div class="node-content">Asks visitor for their name and email to send a follow-up or book a demo.</div>
+          </div>
+
+          <div class="flow-connector">↓</div>
+
+          <div class="flow-node start-node" style="max-width:340px;margin:0 auto">
+            <div class="flow-node-header">
+              <div class="node-icon start">✅</div>
+              <div class="node-label" style="color:var(--accent)">End · Lead Captured</div>
+            </div>
+            <div class="node-content">Lead saved to CRM. Follow-up email sent via Mailchimp.</div>
+          </div>
+
+          <button class="btn btn-ghost btn-sm" style="margin:12px auto;display:block" onclick="showToast('Block added! ✅')">+ Add Block</button>
+        </div>
+
+        <!-- Preview Tab -->
+        <div id="tab-preview" style="display:none;flex:1;overflow-y:auto;padding:24px;align-items:flex-start;justify-content:center">
+          <div>
+            <div style="text-align:center;margin-bottom:20px">
+              <div style="font-size:13px;color:var(--text2);margin-bottom:6px">Live preview of your chatbot widget</div>
+              <div class="tag tag-green">● Connected to Flow</div>
+            </div>
+            <div class="chat-container" id="chatWidget">
+              <div class="chat-header-bar">
+                <div class="chat-avatar-sm">🤖</div>
+                <div style="flex:1">
+                  <div class="chat-title-sm">SalesBot Pro</div>
+                  <div class="chat-sub-sm">Typically replies in seconds</div>
+                </div>
+                <div class="chat-online"></div>
+              </div>
+              <div class="chat-messages" id="chatMessages">
+                <div class="msg msg-bot">Hi there! 👋 I'm your AI assistant. Are you looking to buy, get support, or just browsing?</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-ghost btn-sm" onclick="sendMsg('I want to buy')">🛒 Buying</button>
+                  <button class="btn btn-ghost btn-sm" onclick="sendMsg('Need support')">🎧 Support</button>
+                  <button class="btn btn-ghost btn-sm" onclick="sendMsg('Just looking')">👀 Browsing</button>
+                </div>
+              </div>
+              <div class="chat-input-bar">
+                <input class="chat-input-field" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendChatInput()">
+                <button class="chat-send" onclick="sendChatInput()">
+                  <svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Training Tab -->
+        <div id="tab-training" style="display:none;flex:1;overflow-y:auto;padding:24px">
+          <div class="card" style="max-width:680px;margin:0 auto">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Knowledge Base</div>
+                <div class="card-sub">Train your bot with your content</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="showToast('Training started! 🧠')">Train Now</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div class="form-group">
+                <label class="form-label">System Prompt / Personality</label>
+                <textarea class="form-textarea" style="min-height:120px">You are a helpful sales assistant for [Company Name]. Your goal is to help visitors understand our products, handle objections, and book demo calls. Always be friendly, concise, and professional. Never discuss competitors. If you don't know something, say "Let me connect you with our team."</textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">AI Model</label>
+                <select class="form-select">
+                  <option>GPT-4o (Recommended)</option>
+                  <option>GPT-4 Turbo</option>
+                  <option>GPT-3.5 Turbo (Faster)</option>
+                  <option>Claude 3.5 Sonnet</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Upload Training Data</label>
+                <div style="border:2px dashed var(--border2);border-radius:var(--radius);padding:28px;text-align:center;cursor:pointer" onclick="showToast('File uploaded! Processing... 📄')">
+                  <div style="font-size:28px;margin-bottom:8px">📁</div>
+                  <div style="font-size:13px;color:var(--text2)">Drop PDFs, .txt, .docx or paste URLs</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:4px">Max 50MB per file</div>
+                </div>
+              </div>
+              <div>
+                <label class="form-label">Trained Sources (3)</label>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:13px">
+                    <span>📄</span> <span style="flex:1">pricing-page.pdf</span> <span class="tag tag-green">Trained</span>
+                  </div>
+                  <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:13px">
+                    <span>🔗</span> <span style="flex:1">yoursite.com/faq</span> <span class="tag tag-green">Trained</span>
+                  </div>
+                  <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:13px">
+                    <span>📄</span> <span style="flex:1">product-catalog-2024.pdf</span> <span class="tag tag-amber">Processing...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Config Panel -->
+        <div class="builder-config" style="width:280px;flex-shrink:0">
+          <div style="font-size:13px;font-weight:700;margin-bottom:16px">Bot Settings</div>
+
+          <div class="form-group">
+            <label class="form-label">Bot Name</label>
+            <input class="form-input" value="SalesBot Pro">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bot Avatar</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="width:36px;height:36px;background:var(--bg3);border:2px solid var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">🤖</div>
+              <div style="width:36px;height:36px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px" onclick="showToast('Avatar changed!')">🦾</div>
+              <div style="width:36px;height:36px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px" onclick="showToast('Avatar changed!')">💁</div>
+              <div style="width:36px;height:36px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px" onclick="showToast('Avatar changed!')">🧑‍💻</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Brand Color</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="color" value="#6C47FF" style="width:36px;height:36px;border:none;border-radius:6px;cursor:pointer;background:none">
+              <input class="form-input" value="#6C47FF" style="font-family:monospace;font-size:12px">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Welcome Message</label>
+            <textarea class="form-textarea" style="min-height:70px">Hi there! 👋 I'm your AI assistant. How can I help you today?</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Position</label>
+            <select class="form-select">
+              <option>Bottom Right</option>
+              <option>Bottom Left</option>
+              <option>Center</option>
+            </select>
+          </div>
+
+          <hr class="divider">
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Behavior</div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Auto-open on load</div>
+              <div class="toggle-sub">Opens chat after 5s delay</div>
+            </div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Collect email</div>
+              <div class="toggle-sub">Before AI responds</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Human handoff</div>
+              <div class="toggle-sub">When bot is unsure</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Chat transcript email</div>
+              <div class="toggle-sub">Sent to visitor after chat</div>
+            </div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+
+          <hr class="divider">
+          <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-bottom:8px" onclick="openModal('embed')">⟨/⟩ Get Embed Code</button>
+          <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center" onclick="showToast('Saved! ✅')">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ANALYTICS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-analytics" class="screen">
+      <div class="main-header">
+        <div>
+          <div class="page-title">Analytics</div>
+          <div class="breadcrumb">All bots · Last 30 days</div>
+        </div>
+        <div class="header-actions">
+          <select class="form-select" style="width:auto;font-size:12px;padding:6px 10px">
+            <option>Last 30 days</option>
+            <option>Last 7 days</option>
+            <option>Last 90 days</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="showToast('Report exported! 📊')">⬇ Export</button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Conversations</div>
+            <div class="metric-value" style="color:var(--primary)">12,847</div>
+            <div class="metric-trend trend-up">↑ 18.4%</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Avg. Duration</div>
+            <div class="metric-value" style="color:var(--accent)">3.2m</div>
+            <div class="metric-trend trend-up">↑ 0.4m</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Satisfaction</div>
+            <div class="metric-value" style="color:var(--warning)">4.7 ★</div>
+            <div class="metric-trend trend-up">↑ 0.2</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Bounce Rate</div>
+            <div class="metric-value" style="color:var(--danger)">13%</div>
+            <div class="metric-trend trend-up">↓ 2%</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Daily Conversations</div>
+              <span class="tag tag-purple">30-day trend</span>
+            </div>
+            <div class="chart-bar-wrap" id="analyticsChart" style="height:120px"></div>
+            <div class="chart-labels" id="analyticsChartLabels"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Top Questions</div></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:12.5px;display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2)">"What's the pricing?"</span>
+                <span class="tag tag-purple">2,340</span>
+              </div>
+              <div style="font-size:12.5px;display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2)">"How do I cancel?"</span>
+                <span class="tag tag-purple">1,821</span>
+              </div>
+              <div style="font-size:12.5px;display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2)">"Is there a free trial?"</span>
+                <span class="tag tag-purple">1,540</span>
+              </div>
+              <div style="font-size:12.5px;display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2)">"Book a demo"</span>
+                <span class="tag tag-green">1,204</span>
+              </div>
+              <div style="font-size:12.5px;display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2)">"Enterprise pricing"</span>
+                <span class="tag tag-amber">892</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- CONVERSATIONS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-conversations" class="screen">
+      <div class="main-header">
+        <div>
+          <div class="page-title">Conversations</div>
+          <div class="breadcrumb">12,847 total</div>
+        </div>
+        <div class="header-actions">
+          <input class="form-input" placeholder="🔍 Search conversations..." style="width:220px;font-size:13px">
+          <select class="form-select" style="width:auto">
+            <option>All bots</option>
+            <option>SalesBot Pro</option>
+            <option>Support Hero</option>
+          </select>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Bot</th>
+                <th>First Message</th>
+                <th>Duration</th>
+                <th>Outcome</th>
+                <th>Rating</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="convTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- INTEGRATIONS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-integrations" class="screen">
+      <div class="main-header">
+        <div>
+          <div class="page-title">Integrations</div>
+          <div class="breadcrumb">Connect your stack</div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div style="margin-bottom:20px">
+          <div class="section-title" style="margin-bottom:4px">Connected (3)</div>
+        </div>
+        <div class="integration-grid" style="margin-bottom:24px">
+          <div class="integration-card connected" onclick="showToast('Slack settings opened')">
+            <div class="integration-logo">💬</div>
+            <div class="integration-name">Slack</div>
+            <div class="integration-status">● Connected</div>
+          </div>
+          <div class="integration-card connected" onclick="showToast('HubSpot settings opened')">
+            <div class="integration-logo">🧡</div>
+            <div class="integration-name">HubSpot</div>
+            <div class="integration-status">● Connected</div>
+          </div>
+          <div class="integration-card connected" onclick="showToast('Mailchimp settings opened')">
+            <div class="integration-logo">🐒</div>
+            <div class="integration-name">Mailchimp</div>
+            <div class="integration-status">● Connected</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <div class="section-title" style="margin-bottom:4px">Available</div>
+        </div>
+        <div class="integration-grid">
+          <div class="integration-card" onclick="showToast('Connecting to Zapier...')">
+            <div class="integration-logo">⚡</div>
+            <div class="integration-name">Zapier</div>
+            <div class="integration-status">Connect →</div>
+          </div>
+          <div class="integration-card" onclick="showToast('Connecting to Notion...')">
+            <div class="integration-logo">📝</div>
+            <div class="integration-name">Notion</div>
+            <div class="integration-status">Connect →</div>
+          </div>
+          <div class="integration-card" onclick="showToast('Connecting to Salesforce...')">
+            <div class="integration-logo">☁️</div>
+            <div class="integration-name">Salesforce</div>
+            <div class="integration-status">Connect →</div>
+          </div>
+          <div class="integration-card" onclick="showToast('Connecting to Calendly...')">
+            <div class="integration-logo">📅</div>
+            <div class="integration-name">Calendly</div>
+            <div class="integration-status">Connect →</div>
+          </div>
+          <div class="integration-card" onclick="showToast('Connecting to Stripe...')">
+            <div class="integration-logo">💳</div>
+            <div class="integration-name">Stripe</div>
+            <div class="integration-status">Connect →</div>
+          </div>
+          <div class="integration-card" onclick="showToast('Connecting to Google Sheets...')">
+            <div class="integration-logo">📊</div>
+            <div class="integration-name">Google Sheets</div>
+            <div class="integration-status">Connect →</div>
+          </div>
+          <div class="integration-card" onclick="showToast('Connecting to Webhook...')">
+            <div class="integration-logo">🔗</div>
+            <div class="integration-name">Webhooks</div>
+            <div class="integration-status">Connect →</div>
+          </div>
+          <div class="integration-card" onclick="showToast('Connecting to Make...')">
+            <div class="integration-logo">🔄</div>
+            <div class="integration-name">Make (Integromat)</div>
+            <div class="integration-status">Connect →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SETTINGS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-settings" class="screen">
+      <div class="main-header">
+        <div class="page-title">Settings</div>
+        <div class="header-actions">
+          <button class="btn btn-primary btn-sm" onclick="showToast('Settings saved! ✅')">Save Changes</button>
+        </div>
+      </div>
+      <div class="screen-body" style="max-width:640px">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:16px">Account</div>
+          <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" value="John Doe"></div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" value="john@yoursite.com" type="email"></div>
+          <div class="form-group"><label class="form-label">Company</label><input class="form-input" value="Acme Corp"></div>
+          <div class="form-group"><label class="form-label">OpenAI API Key</label><input class="form-input" value="sk-••••••••••••••••••••••••••••••••" type="password"></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:16px">Notifications</div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">New lead captured</div><div class="toggle-sub">Email when bot collects a lead</div></div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Weekly digest</div><div class="toggle-sub">Summary of bot performance</div></div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Human handoff alerts</div><div class="toggle-sub">Notify when bot escalates</div></div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:4px">Subscription</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:16px">Currently on Pro Plan — renews June 14, 2027</div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-ghost btn-sm" onclick="showToast('Upgrade options opened')">⬆ Upgrade to Business</button>
+            <button class="btn btn-danger btn-sm" onclick="showToast('Cancel flow started...')">Cancel Plan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── MODALS ─── -->
+<div class="modal-overlay" id="modal-newbot">
+  <div class="modal">
+    <div class="modal-title">Create New Bot</div>
+    <div class="modal-sub">Pick a template or start from scratch.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <div class="bot-card" onclick="selectTemplate(this,'Sales Bot')" style="cursor:pointer;padding:14px">
+        <div style="font-size:24px;margin-bottom:8px">🛒</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Sales Assistant</div>
+        <div style="font-size:11px;color:var(--text2)">Convert visitors into leads</div>
+      </div>
+      <div class="bot-card" onclick="selectTemplate(this,'Support Bot')" style="cursor:pointer;padding:14px">
+        <div style="font-size:24px;margin-bottom:8px">🎧</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Support Bot</div>
+        <div style="font-size:11px;color:var(--text2)">24/7 customer support</div>
+      </div>
+      <div class="bot-card" onclick="selectTemplate(this,'Lead Gen Bot')" style="cursor:pointer;padding:14px">
+        <div style="font-size:24px;margin-bottom:8px">📅</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Lead Gen Bot</div>
+        <div style="font-size:11px;color:var(--text2)">Book meetings automatically</div>
+      </div>
+      <div class="bot-card" onclick="selectTemplate(this,'Custom')" style="cursor:pointer;padding:14px;border-style:dashed">
+        <div style="font-size:24px;margin-bottom:8px">✨</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Custom</div>
+        <div style="font-size:11px;color:var(--text2)">Start from blank canvas</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bot Name</label>
+      <input class="form-input" id="newBotName" placeholder="e.g. SalesBot Pro">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('newbot')">Cancel</button>
+      <button class="btn btn-primary" onclick="createBot()">Create Bot →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-embed">
+  <div class="modal">
+    <div class="modal-title">Embed on Your Website</div>
+    <div class="modal-sub">Paste this code before the &lt;/body&gt; tag on your website.</div>
+    <div class="embed-box" id="embedCode">
+&lt;!-- ChatFlow Widget · chatflow.app --&gt;
+&lt;script&gt;
+  (function(c,h,a,t,f,l,o,w){
+    c[f]=c[f]||function(){(c[f].q=c[f].q||[]).push(arguments)};
+    l=h.createElement(a);o=h.getElementsByTagName(a)[0];
+    l.async=1;l.src=t;o.parentNode.insertBefore(l,o)
+  })(window,document,'script','https://cdn.chatflow.app/widget.js','cf');
+  cf('init', {
+    botId: 'bot_xK9mP2qR',
+    theme: '#6C47FF',
+    position: 'bottom-right'
+  });
+&lt;/script&gt;
+    </div>
+    <button class="copy-btn" onclick="copyEmbed()">📋 Copy</button>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('embed')">Close</button>
+      <button class="btn btn-primary" onclick="showToast('Docs opened'); closeModal('embed')">View Docs →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast">
+  <span class="toast-icon">✓</span>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+  // ── NAVIGATION
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navMap = {dashboard:0,bots:1,builder:2,analytics:3,conversations:4,integrations:5,settings:6};
+    const items = document.querySelectorAll('.nav-item');
+    if(navMap[id] !== undefined) items[navMap[id]].classList.add('active');
+    if(id === 'analytics') renderAnalyticsChart();
+    if(id === 'conversations') renderConvTable();
+    if(id === 'dashboard') renderDashChart();
+  }
+
+  function switchTab(btn, tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    ['flow','preview','training'].forEach(t => {
+      const el = document.getElementById('tab-' + t);
+      if(el) el.style.display = (t === tab) ? 'flex' : 'none';
+    });
+  }
+
+  // ── MODALS
+  function openModal(id) {
+    document.getElementById('modal-' + id).classList.add('show');
+  }
+  function closeModal(id) {
+    document.getElementById('modal-' + id).classList.remove('show');
+  }
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if(e.target === m) m.classList.remove('show'); });
+  });
+
+  // ── TOAST
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  // ── CREATE BOT
+  function selectTemplate(card, name) {
+    document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('active-bot'));
+    card.classList.add('active-bot');
+    document.getElementById('newBotName').value = name;
+  }
+  function createBot() {
+    closeModal('newbot');
+    showScreen('builder');
+    showToast('Bot created! Start building your flow 🚀');
+  }
+
+  // ── COPY EMBED
+  function copyEmbed() {
+    const code = document.getElementById('embedCode').innerText;
+    navigator.clipboard.writeText(code).then(() => showToast('Embed code copied! 📋'));
+  }
+
+  // ── CHAT PREVIEW
+  const botReplies = {
+    'i want to buy': "Great! 🛒 We have three plans starting at $49/mo. Want me to walk you through the options?",
+    'need support': "Got it! 🎧 I can help resolve most issues instantly. What seems to be the problem?",
+    'just looking': "No worries! 👀 Take your time. I'm here if you have questions about our product.",
+    'default': "Thanks for your message! Let me connect you with the right information. 😊"
+  };
+
+  function sendMsg(text) {
+    addMsg(text, 'user');
+    setTimeout(() => {
+      const key = text.toLowerCase();
+      addMsg(botReplies[key] || botReplies.default, 'bot');
+    }, 600);
+  }
+
+  function sendChatInput() {
+    const inp = document.getElementById('chatInput');
+    const val = inp.value.trim();
+    if(!val) return;
+    addMsg(val, 'user');
+    inp.value = '';
+    setTimeout(() => addMsg(botReplies.default, 'bot'), 600);
+  }
+
+  function addMsg(text, type) {
+    const msgs = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'msg msg-' + type;
+    div.textContent = text;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  // ── CHARTS
+  function renderDashChart() {
+    const vals = [320,450,380,600,520,710,490,830,750,640,880,920,1050,980];
+    const max = Math.max(...vals);
+    const wrap = document.getElementById('dashChart');
+    const lWrap = document.getElementById('dashChartLabels');
+    if(!wrap) return;
+    const days = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14'];
+    wrap.innerHTML = vals.map((v,i) =>
+      `<div class="chart-bar" style="height:${Math.round(v/max*100)}%;background:var(--primary)" title="Day ${days[i]}: ${v} msgs"></div>`
+    ).join('');
+    lWrap.innerHTML = days.filter((_,i) => i%3===0).map(d => `<div class="chart-label">${d}</div>`).join('');
+  }
+
+  function renderAnalyticsChart() {
+    const vals = Array.from({length:30}, () => Math.floor(Math.random()*600+200));
+    const max = Math.max(...vals);
+    const wrap = document.getElementById('analyticsChart');
+    const lWrap = document.getElementById('analyticsChartLabels');
+    if(!wrap) return;
+    wrap.style.height = '120px';
+    wrap.innerHTML = vals.map((v,i) =>
+      `<div class="chart-bar" style="height:${Math.round(v/max*100)}%;background:var(--primary);min-width:6px" title="Day ${i+1}: ${v}"></div>`
+    ).join('');
+    lWrap.innerHTML = ['1','7','14','21','30'].map(d => `<div class="chart-label">${d}</div>`).join('');
+  }
+
+  // ── CONVERSATIONS TABLE
+  function renderConvTable() {
+    const tbody = document.getElementById('convTable');
+    if(!tbody) return;
+    const bots = ['SalesBot Pro','Support Hero','Lead Catcher'];
+    const msgs = ['What\'s the pricing?','How do I cancel?','Is there a free trial?','Book a demo','Need help logging in','Enterprise plan info?','Looking for integrations','Can I export data?'];
+    const outcomes = [['Resolved','tag-green'],['Lead Captured','tag-purple'],['Escalated','tag-amber'],['Bounced','tag-red']];
+    let html = '';
+    for(let i=0;i<20;i++) {
+      const b = bots[Math.floor(Math.random()*bots.length)];
+      const m = msgs[Math.floor(Math.random()*msgs.length)];
+      const [o,cls] = outcomes[Math.floor(Math.random()*outcomes.length)];
+      const mins = Math.floor(Math.random()*120);
+      const rating = (Math.random()>0.2 ? `${'★'.repeat(Math.floor(Math.random()*2)+4)}` : '—');
+      html += `<tr>
+        <td style="color:var(--text3);font-family:monospace;font-size:12px">#${28000+i}</td>
+        <td>${b}</td>
+        <td style="max-width:180px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${m}</td>
+        <td>${mins < 60 ? mins+'m' : Math.floor(mins/60)+'h '+mins%60+'m'}</td>
+        <td><span class="tag ${cls}">${o}</span></td>
+        <td style="color:var(--warning)">${rating}</td>
+        <td>${Math.floor(Math.random()*24)}h ago</td>
+      </tr>`;
+    }
+    tbody.innerHTML = html;
+  }
+
+  // ── INIT
+  renderDashChart();
+</script>
+</body>
+</html>
